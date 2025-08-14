@@ -19,27 +19,8 @@ def trim(im: Image.Image) -> Image.Image:
     bbox = diff.getbbox()
     return im.crop(bbox) if bbox else im
 
-def wrap_text(text: str, width: int = 40) -> str:
-    """Découpe une longue chaîne de caractères en plusieurs lignes."""
-    lines = []
-    current_line = ""
-    for word in text.split():
-        if len(current_line) + len(word) + 1 > width:
-            lines.append(current_line)
-            current_line = word
-        else:
-            if current_line:
-                current_line += " "
-            current_line += word
-    lines.append(current_line)
-    return "\n".join(lines)
-
-
 def generate_html(task: str) -> str:
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-
-    # Découpe le texte de la tâche pour éviter les débordements
-    wrapped_task = wrap_text(task, width=32)
 
     return f"""<!DOCTYPE html>
 <html lang="fr">
@@ -66,9 +47,12 @@ def generate_html(task: str) -> str:
   .date-box .line {{
     width:100%; border-top: 2px solid #444; margin:6px 0;
   }}
-  .task {{
+  .task-wrapper {{
+    word-wrap: break-word; /* Force le retour à la ligne automatique */
+    text-align: left; /* Aligne le texte à gauche */
+    white-space: normal; /* S'assure que le retour à la ligne est normal */
     font-size:2.3rem; font-weight:800; margin:28px 0;
-    display:inline-flex; gap:12px; align-items:center; justify-content:center;
+    padding: 0 10px; /* Ajoute un peu d'espace */
   }}
   .footer {{
     font-size:1.4rem; color:#666; margin-top:36px;
@@ -85,8 +69,8 @@ def generate_html(task: str) -> str:
       <div class="line"></div>
     </div>
 
-    <div class="task">
-      <pre>✅ {wrapped_task}</pre>
+    <div class="task-wrapper">
+      ✅ {task}
     </div>
     <div class="footer">🔔 N’oublie pas de la réaliser.</div>
   </div>
