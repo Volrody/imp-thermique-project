@@ -70,7 +70,7 @@ def generate_html(task: str) -> str:
     </div>
 
     <div class="task-wrapper">
-      ✅ {task}
+      {task}
     </div>
     <div class="footer">🔔 N’oublie pas de la réaliser.</div>
   </div>
