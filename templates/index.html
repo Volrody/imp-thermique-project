@@ -23,8 +23,8 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            width: 350px; /* Largeur réduite pour un look plus compact */
-            max-width: 90%; /* S'assure que le formulaire est réactif */
+            width: 350px;
+            max-width: 90%;
         }
         .input-wrapper {
             display: flex;
@@ -39,7 +39,7 @@
             border: none;
             outline: none;
             background: none;
-            flex: 1; /* Permet à la zone de texte de s'étirer */
+            flex: 1;
             font-size: 16px;
             resize: none;
             overflow: hidden;
@@ -189,6 +189,9 @@
                 origin: { y: 0.6 }
             });
         }
+        
+        // Exécute la fonction autoResize au chargement de la page
+        window.onload = autoResize;
     </script>
 </body>
 </html>
