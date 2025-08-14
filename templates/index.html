@@ -55,9 +55,11 @@
         }
         .button-group {
             display: flex;
-            justify-content: center; /* Centre le bouton par défaut */
             gap: 10px;
             transition: 0.3s ease-in-out;
+        }
+        .button-group.split {
+            justify-content: space-between;
         }
         button {
             background: #10a37f;
@@ -68,9 +70,8 @@
             cursor: pointer;
             font-size: 16px;
             box-shadow: 0px 5px 10px rgba(16,163,127,0.3);
-            transition: 0.2s;
+            transition: all 0.3s ease-in-out;
             transform: scale(1);
-            transition: transform 0.1s ease-in-out;
             flex: 1;
         }
         button:hover {
@@ -84,21 +85,21 @@
             box-shadow: 0px 5px 10px rgba(255,167,38,0.3);
             display: none;
             padding: 10px 15px;
-            flex: 0;
             opacity: 0;
             transition: all 0.3s ease-in-out;
+            transform: scale(0);
         }
         .priority-button:hover {
             background: #fb8c00;
         }
         .priority-button.visible {
-            flex: 0 0 auto;
-            opacity: 1;
-            display: flex; /* Utilise flex pour le centrage du contenu */
+            display: flex;
             align-items: center;
             justify-content: center;
+            opacity: 1;
+            transform: scale(1);
             min-width: 50px;
-            padding: 10px;
+            flex: 0 0 auto;
         }
         .priority-button span {
             transition: all 0.2s ease-in-out;
@@ -178,13 +179,17 @@
             const taskInput = document.getElementById('taskInput');
             const priorityButton = document.getElementById('priorityButton');
             const printButton = document.getElementById('printButton');
+            const buttonGroup = document.getElementById('buttonGroup');
+            
             if (taskInput.value.length > 0) {
                 priorityButton.classList.add('visible');
                 printButton.style.flex = '1';
+                buttonGroup.classList.add('split');
             } else {
                 priorityButton.classList.remove('visible');
                 printButton.style.flex = '1';
-                priorityButton.textContent = priorities[0]; // Réinitialise la priorité
+                buttonGroup.classList.remove('split');
+                priorityButton.querySelector('span').textContent = priorities[0];
             }
         }
         
@@ -192,7 +197,6 @@
             currentPriorityIndex = (currentPriorityIndex + 1) % priorities.length;
             const priorityButton = document.getElementById('priorityButton');
             priorityButton.querySelector('span').textContent = priorities[currentPriorityIndex];
-            priorityButton.style.width = 'fit-content';
         });
 
         function autoResize() {
@@ -230,7 +234,7 @@
                     form.reset();
                     taskInput.style.height = '24px';
                     priorityButton.classList.remove('visible');
-                    priorityButton.querySelector('span').textContent = priorities[0]; // Réinitialise l'emoji
+                    priorityButton.querySelector('span').textContent = priorities[0];
                     currentPriorityIndex = 0;
 
                     confirmationMessage.style.display = 'block';
