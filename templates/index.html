@@ -27,11 +27,12 @@
         }
         .input-wrapper {
             display: flex;
-            align-items: flex-start; /* Aligne le contenu en haut */
+            align-items: flex-start;
             background: #f0f0f0;
             border-radius: 25px;
             padding: 10px 15px;
             box-shadow: inset 0px 1px 5px rgba(0,0,0,0.05);
+            transition: 0.3s ease; /* Ajout d'une transition pour l'effet de survol */
         }
         .input-wrapper textarea {
             border: none;
@@ -39,10 +40,11 @@
             background: none;
             flex: 1;
             font-size: 16px;
-            resize: none; /* Désactive le redimensionnement manuel */
-            overflow: hidden; /* Cache la barre de défilement */
-            min-height: 24px; /* Hauteur initiale */
+            resize: none;
+            overflow: hidden;
+            min-height: 24px;
             line-height: 24px;
+            transition: 0.3s ease; /* Ajout d'une transition pour le flou */
         }
         .input-wrapper span {
             font-size: 18px;
@@ -105,6 +107,12 @@
             from { opacity: 1; }
             to { opacity: 0; }
         }
+        /* Effet "Liquid Glass" */
+        .input-wrapper:hover {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -123,14 +131,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
-        // Fonction pour ajuster la hauteur de la zone de texte
         function autoResize() {
             const textarea = document.getElementById('taskInput');
-            textarea.style.height = 'auto'; // Réinitialise la hauteur
-            textarea.style.height = textarea.scrollHeight + 'px'; // Ajuste la hauteur
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
         }
 
-        // Fonction principale pour l'envoi du formulaire
         async function handleFormSubmission(event) {
             event.preventDefault(); 
             
@@ -139,13 +145,11 @@
             const confirmationMessage = document.getElementById('confirmation-message');
             const taskInput = document.getElementById('taskInput');
 
-            // 1. Initialiser les animations et l'interface
             button.classList.add('pressed');
             button.disabled = true;
             confirmationMessage.style.opacity = 0;
             confirmationMessage.style.display = 'none';
 
-            // 2. Envoyer la requête au serveur
             const formData = new FormData(form);
             try {
                 const response = await fetch('/print', {
@@ -154,14 +158,13 @@
                 });
                 const data = await response.json();
 
-                // 3. Gérer la réponse du serveur
                 if (data.status === 'success') {
-                    form.reset(); // Efface le contenu de l'input
-                    taskInput.style.height = '24px'; // Réinitialise la hauteur
+                    form.reset();
+                    taskInput.style.height = '24px';
                     
                     confirmationMessage.style.display = 'block';
                     confirmationMessage.style.animation = 'fadein 0.5s forwards';
-                    launchConfetti(); // Lancer les confettis
+                    launchConfetti();
 
                     setTimeout(() => {
                         confirmationMessage.style.animation = 'fadeout 0.5s forwards';
@@ -173,13 +176,11 @@
                 alert('Une erreur est survenue lors de l\'impression.');
                 console.error(error);
             } finally {
-                // 4. Réinitialiser l'interface après l'envoi
                 button.classList.remove('pressed');
                 button.disabled = false;
             }
         }
 
-        // Fonction pour les confettis
         function launchConfetti() {
             confetti({
                 particleCount: 150,
