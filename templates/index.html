@@ -55,6 +55,7 @@
         }
         .button-group {
             display: flex;
+            justify-content: center; /* Centre le bouton par défaut */
             gap: 10px;
             transition: 0.3s ease-in-out;
         }
@@ -70,6 +71,7 @@
             transition: 0.2s;
             transform: scale(1);
             transition: transform 0.1s ease-in-out;
+            flex: 1;
         }
         button:hover {
             background: #0e8d6b;
@@ -81,9 +83,8 @@
             background: #ffa726; /* Orange pale */
             box-shadow: 0px 5px 10px rgba(255,167,38,0.3);
             display: none;
-            overflow: hidden;
-            flex: 0;
             padding: 10px 15px;
+            flex: 0;
             opacity: 0;
             transition: all 0.3s ease-in-out;
         }
@@ -93,8 +94,11 @@
         .priority-button.visible {
             flex: 0 0 auto;
             opacity: 1;
-            display: block;
+            display: flex; /* Utilise flex pour le centrage du contenu */
+            align-items: center;
+            justify-content: center;
             min-width: 50px;
+            padding: 10px;
         }
         .priority-button span {
             transition: all 0.2s ease-in-out;
@@ -177,12 +181,10 @@
             if (taskInput.value.length > 0) {
                 priorityButton.classList.add('visible');
                 printButton.style.flex = '1';
-                priorityButton.style.flex = '0 0 auto';
-                priorityButton.style.width = 'fit-content';
             } else {
                 priorityButton.classList.remove('visible');
                 printButton.style.flex = '1';
-                priorityButton.style.flex = '0';
+                priorityButton.textContent = priorities[0]; // Réinitialise la priorité
             }
         }
         
@@ -227,7 +229,9 @@
                 if (data.status === 'success') {
                     form.reset();
                     taskInput.style.height = '24px';
-                    priorityButton.style.display = 'none';
+                    priorityButton.classList.remove('visible');
+                    priorityButton.querySelector('span').textContent = priorities[0]; // Réinitialise l'emoji
+                    currentPriorityIndex = 0;
 
                     confirmationMessage.style.display = 'block';
                     confirmationMessage.style.animation = 'fadein 0.5s forwards';
