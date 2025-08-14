@@ -10,6 +10,7 @@
             font-family: Arial, sans-serif;
             background-color: #f7f7f8;
             display: flex;
+            flex-direction: column; /* Organise les éléments en colonne */
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -59,7 +60,6 @@
         button:hover {
             background: #0e8d6b;
         }
-        /* Classe pour l'animation de pression */
         button.pressed {
             transform: scale(0.95);
         }
@@ -89,11 +89,16 @@
             font-weight: bold;
             margin-top: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            animation: fadein 0.5s;
+            opacity: 0;
+            animation: fadein 0.5s forwards; /* 'forwards' maintient l'état final */
         }
         @keyframes fadein {
             from { opacity: 0; }
             to { opacity: 1; }
+        }
+        @keyframes fadeout {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
     </style>
 </head>
@@ -107,8 +112,7 @@
         <button type="submit" id="printButton">🖨️ Imprimer</button>
     </form>
     
-    <div class="loading-animation" id="loading-spinner"></div>
-    <div id="confirmation-message" style="display:none;">
+    <div id="confirmation-message">
         ✅ Ticket imprimé avec succès !
     </div>
 
@@ -119,15 +123,12 @@
             
             const form = document.getElementById('printForm');
             const button = document.getElementById('printButton');
-            const loadingSpinner = document.getElementById('loading-spinner');
             const confirmationMessage = document.getElementById('confirmation-message');
 
             // 1. Initialiser les animations
             button.classList.add('pressed');
             button.disabled = true;
-            loadingSpinner.style.display = 'block';
-            confirmationMessage.style.display = 'none';
-
+            
             // 2. Envoyer la requête au serveur
             const formData = new FormData(form);
             try {
@@ -139,9 +140,15 @@
 
                 // 3. Gérer la réponse du serveur
                 if (data.status === 'success') {
-                    // Afficher le message de succès
+                    // Masquer l'input, afficher le message de succès et lancer l'animation
+                    form.reset(); // Efface le contenu de l'input
                     confirmationMessage.style.display = 'block';
                     launchConfetti(); // Lancer les confettis
+
+                    // Faire disparaître le message après 2 secondes avec un fade
+                    setTimeout(() => {
+                        confirmationMessage.style.animation = 'fadeout 0.5s forwards';
+                    }, 2000); 
                 } else {
                     alert(`Erreur : ${data.message}`);
                 }
@@ -149,10 +156,9 @@
                 alert('Une erreur est survenue lors de l\'impression.');
                 console.error(error);
             } finally {
-                // 4. Réinitialiser l'interface
+                // 4. Réinitialiser l'interface après l'envoi
                 button.classList.remove('pressed');
                 button.disabled = false;
-                loadingSpinner.style.display = 'none';
             }
         }
 
@@ -165,6 +171,5 @@
             });
         }
     </script>
-
 </body>
 </html>
