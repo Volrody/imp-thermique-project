@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f7f7f8; /* Retour à la couleur de fond d'origine */
+            background-color: #f7f7f8;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -53,6 +53,11 @@
             font-size: 18px;
             margin-right: 10px;
         }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            transition: 0.2s ease-in-out;
+        }
         button {
             background: #10a37f;
             color: white;
@@ -65,12 +70,21 @@
             transition: 0.2s;
             transform: scale(1);
             transition: transform 0.1s ease-in-out;
+            flex: 1; /* Permet aux boutons d'occuper l'espace disponible */
         }
         button:hover {
             background: #0e8d6b;
         }
         button.pressed {
             transform: scale(0.95);
+        }
+        .priority-button {
+            background: #ffa726; /* Orange pale */
+            box-shadow: 0px 5px 10px rgba(255,167,38,0.3);
+            display: none; /* Masqué par défaut */
+        }
+        .priority-button:hover {
+            background: #fb8c00;
         }
         /* Styles pour l'animation de chargement */
         .loading-animation {
@@ -122,9 +136,12 @@
     <form id="printForm" onsubmit="handleFormSubmission(event)">
         <div class="input-wrapper">
             <span>🔍</span>
-            <textarea name="task" id="taskInput" placeholder="Entrez la tâche à imprimer..." oninput="autoResize()" required></textarea>
+            <textarea name="task" id="taskInput" placeholder="Entrez la tâche à imprimer..." oninput="showPriorityButton()" required></textarea>
         </div>
-        <button type="submit" id="printButton">🖨️ Imprimer</button>
+        <div class="button-group">
+            <button type="submit" id="printButton">🖨️ Imprimer</button>
+            <button type="button" class="priority-button" id="priorityButton">⚡️</button>
+        </div>
     </form>
     
     <div id="confirmation-message">
@@ -133,6 +150,24 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
+        const priorities = ['⚡️', '⚡️⚡️', '⚡️⚡️⚡️'];
+        let currentPriorityIndex = 0;
+
+        function showPriorityButton() {
+            const taskInput = document.getElementById('taskInput');
+            const priorityButton = document.getElementById('priorityButton');
+            if (taskInput.value.length > 0) {
+                priorityButton.style.display = 'block';
+            } else {
+                priorityButton.style.display = 'none';
+            }
+        }
+
+        document.getElementById('priorityButton').addEventListener('click', () => {
+            currentPriorityIndex = (currentPriorityIndex + 1) % priorities.length;
+            document.getElementById('priorityButton').textContent = priorities[currentPriorityIndex];
+        });
+
         function autoResize() {
             const textarea = document.getElementById('taskInput');
             textarea.style.height = 'auto';
@@ -143,16 +178,20 @@
             event.preventDefault(); 
             
             const form = document.getElementById('printForm');
-            const button = document.getElementById('printButton');
+            const printButton = document.getElementById('printButton');
+            const priorityButton = document.getElementById('priorityButton');
             const confirmationMessage = document.getElementById('confirmation-message');
             const taskInput = document.getElementById('taskInput');
 
-            button.classList.add('pressed');
-            button.disabled = true;
+            printButton.classList.add('pressed');
+            printButton.disabled = true;
+            priorityButton.disabled = true;
             confirmationMessage.style.opacity = 0;
             confirmationMessage.style.display = 'none';
 
             const formData = new FormData(form);
+            formData.append('priority', priorityButton.textContent);
+
             try {
                 const response = await fetch('/print', {
                     method: 'POST',
@@ -163,7 +202,8 @@
                 if (data.status === 'success') {
                     form.reset();
                     taskInput.style.height = '24px';
-                    
+                    priorityButton.style.display = 'none';
+
                     confirmationMessage.style.display = 'block';
                     confirmationMessage.style.animation = 'fadein 0.5s forwards';
                     launchConfetti();
@@ -178,8 +218,9 @@
                 alert('Une erreur est survenue lors de l\'impression.');
                 console.error(error);
             } finally {
-                button.classList.remove('pressed');
-                button.disabled = false;
+                printButton.classList.remove('pressed');
+                printButton.disabled = false;
+                priorityButton.disabled = false;
             }
         }
 

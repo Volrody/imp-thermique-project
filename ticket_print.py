@@ -19,7 +19,7 @@ def trim(im: Image.Image) -> Image.Image:
     bbox = diff.getbbox()
     return im.crop(bbox) if bbox else im
 
-def generate_html(task: str) -> str:
+def generate_html(task: str, priority: str) -> str:
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     return f"""<!DOCTYPE html>
@@ -47,6 +47,9 @@ def generate_html(task: str) -> str:
   .date-box .line {{
     width:100%; border-top: 2px solid #444; margin:6px 0;
   }}
+  .priority-text {{
+    font-size:1.8rem; font-weight:800; margin-bottom:12px;
+  }}
   .task-wrapper {{
     word-wrap: break-word; /* Force le retour à la ligne automatique */
     text-align: center; /* Aligne le texte au centre */
@@ -68,6 +71,8 @@ def generate_html(task: str) -> str:
       <div>📅 Créé le : {now}</div>
       <div class="line"></div>
     </div>
+    
+    <div class="priority-text">Priorité : {priority}</div>
 
     <div class="task-wrapper">
       {task}
@@ -107,13 +112,15 @@ def print_png(path_png: str):
 def main():
     # Récupère la tâche depuis la ligne de commande (server.py l’envoie déjà comme ça)
     task = " ".join(sys.argv[1:]).strip() if len(sys.argv) > 1 else ""
+    priority = os.environ.get("PRIORITY", "⚡️")
+
     if not task:
         task = input("Entrez la tâche à imprimer : ").strip()
         if not task:
             print("❌ Aucune tâche fournie.")
             return
 
-    html = generate_html(task)
+    html = generate_html(task, priority)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_html:
         html_path = tmp_html.name
