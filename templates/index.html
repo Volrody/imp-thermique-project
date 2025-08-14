@@ -15,6 +15,11 @@
             align-items: center;
             height: 100vh;
         }
+        /* Style pour le fond avec du grain */
+        .grainy-background {
+            background-color: #f7f7f8;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#noiseFilter)" opacity="0.15"/></svg>');
+        }
         form {
             background: white;
             padding: 30px;
@@ -28,7 +33,7 @@
         }
         .input-wrapper {
             display: flex;
-            align-items: center; /* Centrage vertical du contenu */
+            align-items: center;
             background: #f0f0f0;
             border-radius: 25px;
             padding: 10px 15px;
@@ -43,10 +48,10 @@
             font-size: 16px;
             resize: none;
             overflow: hidden;
-            height: 24px; /* Hauteur fixe par défaut */
+            height: 24px;
             line-height: 24px;
             transition: 0.3s ease;
-            padding: 0; /* Suppression du padding pour un meilleur alignement */
+            padding: 0;
         }
         .input-wrapper span {
             font-size: 18px;
@@ -116,7 +121,7 @@
         }
     </style>
 </head>
-<body>
+<body class="grainy-background">
 
     <form id="printForm" onsubmit="handleFormSubmission(event)">
         <div class="input-wrapper">
