@@ -19,8 +19,28 @@ def trim(im: Image.Image) -> Image.Image:
     bbox = diff.getbbox()
     return im.crop(bbox) if bbox else im
 
+def wrap_text(text: str, width: int = 40) -> str:
+    """Découpe une longue chaîne de caractères en plusieurs lignes."""
+    lines = []
+    current_line = ""
+    for word in text.split():
+        if len(current_line) + len(word) + 1 > width:
+            lines.append(current_line)
+            current_line = word
+        else:
+            if current_line:
+                current_line += " "
+            current_line += word
+    lines.append(current_line)
+    return "\n".join(lines)
+
+
 def generate_html(task: str) -> str:
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+    # Découpe le texte de la tâche pour éviter les débordements
+    wrapped_task = wrap_text(task, width=32)
+
     return f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -65,7 +85,9 @@ def generate_html(task: str) -> str:
       <div class="line"></div>
     </div>
 
-    <div class="task">✅ {task}</div>
+    <div class="task">
+      <pre>✅ {wrapped_task}</pre>
+    </div>
     <div class="footer">🔔 N’oublie pas de la réaliser.</div>
   </div>
 </body>
