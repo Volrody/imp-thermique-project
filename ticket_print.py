@@ -22,6 +22,12 @@ def trim(im: Image.Image) -> Image.Image:
 def generate_html(task: str, priority: str) -> str:
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
+    priority_text = "Faible"
+    if priority == "⚡️⚡️":
+        priority_text = "Moyen"
+    elif priority == "⚡️⚡️⚡️":
+        priority_text = "Élevé"
+
     return f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -47,15 +53,21 @@ def generate_html(task: str, priority: str) -> str:
   .date-box .line {{
     width:100%; border-top: 2px solid #444; margin:6px 0;
   }}
+  .priority-wrapper {{
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 20px;
+  }}
   .priority-text {{
-    font-size:1.8rem; font-weight:800; margin-bottom:12px;
+    font-size:1.4rem; font-weight:800;
   }}
   .task-wrapper {{
-    word-wrap: break-word; /* Force le retour à la ligne automatique */
-    text-align: center; /* Aligne le texte au centre */
-    white-space: normal; /* S'assure que le retour à la ligne est normal */
+    word-wrap: break-word;
+    text-align: center;
+    white-space: normal;
     font-size:2.3rem; font-weight:800; margin:28px 0;
-    padding: 0 10px; /* Ajoute un peu d'espace */
+    padding: 0 10px;
   }}
   .footer {{
     font-size:1.4rem; color:#666; margin-top:36px;
@@ -72,7 +84,9 @@ def generate_html(task: str, priority: str) -> str:
       <div class="line"></div>
     </div>
     
-    <div class="priority-text">Priorité : {priority}</div>
+    <div class="priority-wrapper">
+      <div class="priority-text">Priorité : {priority_text}</div>
+    </div>
 
     <div class="task-wrapper">
       {task}
@@ -94,8 +108,7 @@ def render_to_png(html_path: str, out_path: str, width: int = PAPER_WIDTH):
 
 def print_png(path_png: str):
     """Imprime l’image PNG sur l’imprimante réseau."""
-    p = Network(PRINTER_IP)  # profil par défaut
-    # Optionnel : informer la lib de la largeur utile si dispo
+    p = Network(PRINTER_IP)
     try:
         p.profile.profile_data['media']['width']['pixel'] = PAPER_WIDTH
     except Exception:
@@ -110,7 +123,6 @@ def print_png(path_png: str):
         pass
 
 def main():
-    # Récupère la tâche depuis la ligne de commande (server.py l’envoie déjà comme ça)
     task = " ".join(sys.argv[1:]).strip() if len(sys.argv) > 1 else ""
     priority = os.environ.get("PRIORITY", "⚡️")
 
@@ -130,10 +142,7 @@ def main():
         png_path = tmp_png.name
 
     try:
-        # HTML -> PNG
         render_to_png(html_path, png_path, PAPER_WIDTH)
-
-        # Rogner et s’assurer que la largeur = PAPER_WIDTH
         im = Image.open(png_path)
         im = trim(im)
         if im.size[0] != PAPER_WIDTH:
@@ -141,12 +150,9 @@ def main():
             im = im.resize((PAPER_WIDTH, int(im.size[1] * ratio)), Image.LANCZOS)
         im.save(png_path)
 
-        # Impression réseau
         print_png(png_path)
         print("✅ Ticket imprimé.")
-
     finally:
-        # Nettoyage
         for f in (html_path, png_path):
             try:
                 os.remove(f)
