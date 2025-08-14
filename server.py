@@ -1,31 +1,27 @@
 from flask import Flask, request, redirect, render_template
 import subprocess
 
-app = Flask(__name__)
+app = Flask(__name__)  # utilise 'templates/' par défaut
 
-# Remplace la ligne :
-# subprocess.Popen(["python3", "ticket_print.py", task])
+PRINTER_IP = "192.168.4.71" # cette variable n'est pas utilisée ici, mais pas de problème
 
-# Par cette nouvelle version :
+@app.route("/", methods=["GET"])
+def index():
+    return render_template("index.html")
+
 @app.route("/print", methods=["POST"])
 def print_task():
     task = request.form.get("task")
     if task:
-        try:
-            # Lancer le script d'impression en tant que sous-processus
-            process = subprocess.run(
-                ["python3", "ticket_print.py", task],
-                capture_output=True, # Capturer la sortie standard et d'erreur
-                text=True # Traiter la sortie comme du texte
-            )
-            # Afficher les sorties dans le journal du service
-            print(f"Stdout du script d'impression: {process.stdout}")
-            print(f"Stderr du script d'impression: {process.stderr}")
-            
-            # Gérer les erreurs de retour
-            if process.returncode != 0:
-                print("❌ Le script d'impression a échoué.")
-        except Exception as e:
-            print(f"❌ Erreur lors du lancement du script : {e}")
-
+        # Lancer le script d'impression en arrière-plan.
+        # Attention : si ton système est sous Windows, il faudra peut-être ajuster la commande.
+        # Ici on utilise `Popen` pour ne pas bloquer le serveur en attendant la fin de l'impression.
+        subprocess.Popen(["python3", "ticket_print.py", task])
+    
+    # Rediriger l'utilisateur vers la page principale après l'impression
     return redirect("/")
+
+if __name__ == "__main__":
+    # L'argument `debug=True` est super pour le développement, il redémarre le serveur
+    # automatiquement quand tu modifies le code. Pense à le retirer en production.
+    app.run(host="0.0.0.0", port=8080, debug=True)
