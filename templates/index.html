@@ -28,7 +28,7 @@
         }
         .input-wrapper {
             display: flex;
-            align-items: flex-start;
+            align-items: center; /* Centrage vertical du contenu */
             background: #f0f0f0;
             border-radius: 25px;
             padding: 10px 15px;
@@ -43,14 +43,14 @@
             font-size: 16px;
             resize: none;
             overflow: hidden;
-            min-height: 24px;
+            height: 24px; /* Hauteur fixe par défaut */
             line-height: 24px;
             transition: 0.3s ease;
+            padding: 0; /* Suppression du padding pour un meilleur alignement */
         }
         .input-wrapper span {
             font-size: 18px;
             margin-right: 10px;
-            padding-top: 5px;
         }
         button {
             background: #10a37f;
@@ -189,8 +189,6 @@
                 origin: { y: 0.6 }
             });
         }
-        
-        window.onload = autoResize;
     </script>
 </body>
 </html>
