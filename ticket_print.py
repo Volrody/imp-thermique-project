@@ -49,7 +49,7 @@ def generate_html(task: str) -> str:
   }}
   .task-wrapper {{
     word-wrap: break-word; /* Force le retour à la ligne automatique */
-    text-align: left; /* Aligne le texte à gauche */
+    text-align: center; /* Aligne le texte au centre */
     white-space: normal; /* S'assure que le retour à la ligne est normal */
     font-size:2.3rem; font-weight:800; margin:28px 0;
     padding: 0 10px; /* Ajoute un peu d'espace */
