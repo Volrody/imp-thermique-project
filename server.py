@@ -16,7 +16,7 @@ def print_task():
         # Lancer le script d'impression en arrière-plan.
         # Attention : si ton système est sous Windows, il faudra peut-être ajuster la commande.
         # Ici on utilise `Popen` pour ne pas bloquer le serveur en attendant la fin de l'impression.
-        subprocess.Popen(["python", "ticket_print.py", task])
+        subprocess.Popen(["python3", "ticket_print.py", task])
     
     # Rediriger l'utilisateur vers la page principale après l'impression
     return redirect("/")
