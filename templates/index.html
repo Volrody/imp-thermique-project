@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,16 +53,48 @@
             font-size: 16px;
             box-shadow: 0px 5px 10px rgba(16,163,127,0.3);
             transition: 0.2s;
-            /* Ajout de la transition pour l'animation de pression */
             transform: scale(1);
             transition: transform 0.1s ease-in-out;
         }
         button:hover {
             background: #0e8d6b;
         }
-        /* Classe pour l'animation de pression */
         button.pressed {
             transform: scale(0.95);
+        }
+
+        /* Styles pour l'animation de chargement */
+        .loading-animation {
+            display: none; /* Caché par défaut */
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #10a37f;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Styles pour le message de confirmation */
+        #confirmation-message {
+            display: none; /* Caché par défaut */
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: fadein 0.5s;
+        }
+        @keyframes fadein {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
@@ -76,18 +107,26 @@
         </div>
         <button type="submit" id="printButton">🖨️ Imprimer</button>
     </form>
+    
+    <div class="loading-animation" id="loading-spinner"></div>
+    <div id="confirmation-message" style="display:none;">
+        ✅ Ticket imprimé avec succès !
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
         function launchConfettiAndAnimate(event) {
-            // Empêche la soumission du formulaire pour laisser le temps aux animations
             event.preventDefault(); 
             
             const button = document.getElementById('printButton');
-            
-            // Ajoute la classe 'pressed' pour l'animation du bouton
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const confirmationMessage = document.getElementById('confirmation-message');
+
             button.classList.add('pressed');
-            
+            button.disabled = true; // Désactive le bouton pour éviter les clics multiples
+            loadingSpinner.style.display = 'block'; // Affiche l'animation de chargement
+            confirmationMessage.style.display = 'none'; // Cache le message de confirmation
+
             // Lance l'animation de confettis
             confetti({
                 particleCount: 150,
@@ -95,11 +134,21 @@
                 origin: { y: 0.6 }
             });
             
-            // Après un petit délai, retire la classe et soumet le formulaire
+            // Soumet le formulaire après un petit délai pour l'animation
             setTimeout(() => {
-                button.classList.remove('pressed');
                 event.target.submit();
-            }, 500); // Délai de 500ms
+            }, 500); 
+        }
+
+        // On peut aussi gérer la confirmation après le rechargement de la page si besoin
+        // Ici, on part du principe que le serveur renvoie toujours un succès
+        // Si tu veux une confirmation plus précise, il faudra utiliser JavaScript asynchrone
+        window.onload = function() {
+            // Un exemple pour afficher la confirmation après un rechargement si nécessaire
+            // let urlParams = new URLSearchParams(window.location.search);
+            // if (urlParams.get('status') === 'success') {
+            //     document.getElementById('confirmation-message').style.display = 'block';
+            // }
         }
     </script>
 
