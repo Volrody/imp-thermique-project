@@ -10,7 +10,7 @@
             font-family: Arial, sans-serif;
             background-color: #f7f7f8;
             display: flex;
-            flex-direction: column; /* Organise les éléments en colonne */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -27,22 +27,27 @@
         }
         .input-wrapper {
             display: flex;
-            align-items: center;
+            align-items: flex-start; /* Aligne le contenu en haut */
             background: #f0f0f0;
             border-radius: 25px;
             padding: 10px 15px;
             box-shadow: inset 0px 1px 5px rgba(0,0,0,0.05);
         }
-        .input-wrapper input {
+        .input-wrapper textarea {
             border: none;
             outline: none;
             background: none;
             flex: 1;
             font-size: 16px;
+            resize: none; /* Désactive le redimensionnement manuel */
+            overflow: hidden; /* Cache la barre de défilement */
+            min-height: 24px; /* Hauteur initiale */
+            line-height: 24px;
         }
         .input-wrapper span {
             font-size: 18px;
             margin-right: 10px;
+            padding-top: 5px;
         }
         button {
             background: #10a37f;
@@ -65,7 +70,7 @@
         }
         /* Styles pour l'animation de chargement */
         .loading-animation {
-            display: none; /* Caché par défaut */
+            display: none;
             border: 4px solid #f3f3f3;
             border-top: 4px solid #10a37f;
             border-radius: 50%;
@@ -80,7 +85,7 @@
         }
         /* Styles pour le message de confirmation */
         #confirmation-message {
-            display: none; /* Caché par défaut */
+            display: none;
             background-color: #d4edda;
             color: #155724;
             padding: 15px;
@@ -90,7 +95,7 @@
             margin-top: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             opacity: 0;
-            animation: fadein 0.5s forwards; /* 'forwards' maintient l'état final */
+            animation: fadein 0.5s forwards;
         }
         @keyframes fadein {
             from { opacity: 0; }
@@ -107,7 +112,7 @@
     <form id="printForm" onsubmit="handleFormSubmission(event)">
         <div class="input-wrapper">
             <span>🔍</span>
-            <input type="text" name="task" placeholder="Entrez la tâche à imprimer..." required>
+            <textarea name="task" id="taskInput" placeholder="Entrez la tâche à imprimer..." oninput="autoResize()" required></textarea>
         </div>
         <button type="submit" id="printButton">🖨️ Imprimer</button>
     </form>
@@ -118,17 +123,28 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
+        // Fonction pour ajuster la hauteur de la zone de texte
+        function autoResize() {
+            const textarea = document.getElementById('taskInput');
+            textarea.style.height = 'auto'; // Réinitialise la hauteur
+            textarea.style.height = textarea.scrollHeight + 'px'; // Ajuste la hauteur
+        }
+
+        // Fonction principale pour l'envoi du formulaire
         async function handleFormSubmission(event) {
             event.preventDefault(); 
             
             const form = document.getElementById('printForm');
             const button = document.getElementById('printButton');
             const confirmationMessage = document.getElementById('confirmation-message');
+            const taskInput = document.getElementById('taskInput');
 
-            // 1. Initialiser les animations
+            // 1. Initialiser les animations et l'interface
             button.classList.add('pressed');
             button.disabled = true;
-            
+            confirmationMessage.style.opacity = 0;
+            confirmationMessage.style.display = 'none';
+
             // 2. Envoyer la requête au serveur
             const formData = new FormData(form);
             try {
@@ -140,12 +156,13 @@
 
                 // 3. Gérer la réponse du serveur
                 if (data.status === 'success') {
-                    // Masquer l'input, afficher le message de succès et lancer l'animation
                     form.reset(); // Efface le contenu de l'input
+                    taskInput.style.height = '24px'; // Réinitialise la hauteur
+                    
                     confirmationMessage.style.display = 'block';
+                    confirmationMessage.style.animation = 'fadein 0.5s forwards';
                     launchConfetti(); // Lancer les confettis
 
-                    // Faire disparaître le message après 2 secondes avec un fade
                     setTimeout(() => {
                         confirmationMessage.style.animation = 'fadeout 0.5s forwards';
                     }, 2000); 
