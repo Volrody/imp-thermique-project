@@ -23,7 +23,8 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            width: 350px;
+            width: 350px; /* Largeur réduite pour un look plus compact */
+            max-width: 90%; /* S'assure que le formulaire est réactif */
         }
         .input-wrapper {
             display: flex;
@@ -32,7 +33,7 @@
             border-radius: 25px;
             padding: 10px 15px;
             box-shadow: inset 0px 1px 5px rgba(0,0,0,0.05);
-            transition: 0.3s ease; /* Ajout d'une transition pour l'effet de survol */
+            transition: 0.3s ease;
         }
         .input-wrapper textarea {
             border: none;
@@ -44,7 +45,7 @@
             overflow: hidden;
             min-height: 24px;
             line-height: 24px;
-            transition: 0.3s ease; /* Ajout d'une transition pour le flou */
+            transition: 0.3s ease;
         }
         .input-wrapper span {
             font-size: 18px;
