@@ -1,5 +1,6 @@
 import sys
 import os
+import html
 import tempfile
 import subprocess
 from datetime import datetime
@@ -21,6 +22,7 @@ def trim(im: Image.Image) -> Image.Image:
 
 def generate_html(task: str, priority: str) -> str:
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    task = html.escape(task).replace("\n", "<br>")
 
     priority_text = "Faible"
     if priority == "⚡️⚡️":
@@ -96,6 +98,70 @@ def generate_html(task: str, priority: str) -> str:
 </body>
 </html>"""
 
+def generate_message_html(message: str, sender: str) -> str:
+    now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    message = html.escape(message).replace("\n", "<br>")
+    sender = html.escape(sender)
+
+    return f"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<style>
+  body {{
+    background:#fff; margin:0;
+    display:flex; justify-content:center; padding:20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }}
+  #ticket {{
+    width:{PAPER_WIDTH}px; background:#fff; padding:28px; text-align:center;
+  }}
+  .title {{
+    font-size:1.9rem; font-weight:900; margin:0 0 6px;
+  }}
+  .from {{
+    font-size:1.5rem; margin:0 0 4px;
+  }}
+  .from b {{ font-weight:900; }}
+  .date {{
+    font-size:1.1rem; color:#444;
+  }}
+  .dashed {{
+    border-top: 3px dashed #444; margin:22px 0;
+  }}
+  .message {{
+    word-wrap: break-word; white-space: normal;
+    font-size:1.8rem; font-weight:600; line-height:1.35;
+    text-align:left; padding: 0 6px;
+  }}
+  .quote {{
+    font-size:4rem; font-weight:900; line-height:1; height:2.2rem;
+  }}
+  .signature {{
+    text-align:right; font-size:1.5rem; font-style:italic; margin-top:18px; padding: 0 6px;
+  }}
+  .footer {{
+    font-size:1.2rem; color:#666; margin-top:8px;
+  }}
+</style>
+</head>
+<body>
+  <div id="ticket">
+    <div class="title">💌 Nouveau message</div>
+    <div class="from">de <b>{sender}</b></div>
+    <div class="date">📅 Reçu le : {now}</div>
+
+    <div class="dashed"></div>
+    <div class="quote">“</div>
+    <div class="message">{message}</div>
+    <div class="signature">— {sender}</div>
+    <div class="dashed"></div>
+
+    <div class="footer">✉️ Envoyé depuis ton IMP</div>
+  </div>
+</body>
+</html>"""
+
 def render_to_png(html_path: str, out_path: str, width: int = PAPER_WIDTH):
     """Utilise Puppeteer (render_receipt.js) pour convertir HTML → PNG."""
     cmd = [
@@ -125,6 +191,7 @@ def print_png(path_png: str):
 def main():
     task = " ".join(sys.argv[1:]).strip() if len(sys.argv) > 1 else ""
     priority = os.environ.get("PRIORITY", "⚡️")
+    ticket_type = os.environ.get("TICKET_TYPE", "task")
 
     if not task:
         task = input("Entrez la tâche à imprimer : ").strip()
@@ -132,11 +199,14 @@ def main():
             print("❌ Aucune tâche fournie.")
             return
 
-    html = generate_html(task, priority)
+    if ticket_type == "message":
+        content = generate_message_html(task, os.environ.get("SENDER", "Anonyme"))
+    else:
+        content = generate_html(task, priority)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_html:
         html_path = tmp_html.name
-        tmp_html.write(html.encode("utf-8"))
+        tmp_html.write(content.encode("utf-8"))
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_png:
         png_path = tmp_png.name
