@@ -20,144 +20,153 @@ def trim(im: Image.Image) -> Image.Image:
     bbox = diff.getbbox()
     return im.crop(bbox) if bbox else im
 
-def generate_html(task: str, priority: str) -> str:
-    now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    task = html.escape(task).replace("\n", "<br>")
+JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
+        "août", "septembre", "octobre", "novembre", "décembre"]
 
-    priority_text = "Faible"
-    if priority == "⚡️⚡️":
-        priority_text = "Moyen"
-    elif priority == "⚡️⚡️⚡️":
-        priority_text = "Élevé"
+def date_fr(d: datetime) -> str:
+    return f"{JOURS[d.weekday()]} {d.day} {MOIS[d.month - 1]} {d.year}"
+
+def fit_size(text: str, sizes) -> int:
+    """Taille de police selon la longueur du texte : [(longueur max, taille), ...]."""
+    for max_len, size in sizes:
+        if len(text) <= max_len:
+            return size
+    return sizes[-1][1]
+
+def as_html(text: str) -> str:
+    return html.escape(text).replace("\n", "<br>")
+
+# Styles communs aux deux tickets : noir pur sur blanc, pas de gris (rendu thermique)
+BASE_CSS = f"""
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&family=JetBrains+Mono:wght@500;700&family=Caveat:wght@700&display=block');
+* {{ box-sizing: border-box; margin: 0; padding: 0; }}
+body {{ background:#fff; color:#000; font-family: 'Inter', 'Liberation Sans', sans-serif; }}
+#ticket {{ width:{PAPER_WIDTH}px; padding: 8px 6px 28px; }}
+.mono {{ font-family: 'JetBrains Mono', 'DejaVu Sans Mono', monospace; }}
+.caps {{ text-transform: uppercase; letter-spacing: .18em; }}
+.band {{
+  background:#000; color:#fff; border-radius: 14px;
+  display:flex; align-items:center; gap:14px; padding: 18px 22px;
+}}
+.band svg {{ width:44px; height:44px; flex:0 0 auto; }}
+.band .t {{ font-size: 2.3rem; font-weight: 900; letter-spacing: .06em; line-height: 1; flex:1; }}
+.band .h {{ font-size: 1.5rem; font-weight: 700; }}
+.date {{ font-size: 1.05rem; font-weight: 700; text-align:center; margin: 14px 0 0; }}
+.dash {{ border-top: 3px dashed #000; margin: 22px 0; }}
+.rule {{ border-top: 4px solid #000; margin: 22px 0; }}
+"""
+
+ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12.5l3 3 5-6"/></svg>'
+ICON_MAIL = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>'
+ICON_HEART = '<svg viewBox="0 0 24 24" width="18" height="18" fill="#000"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 5.3 3.1 1.7-1.9 3.2-3.1 5.3-3.1 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>'
+
+def generate_html(task: str, priority: str) -> str:
+    now = datetime.now()
+
+    level = {"⚡️⚡️": 2, "⚡️⚡️⚡️": 3}.get(priority, 1)
+    priority_text = {1: "Faible", 2: "Moyenne", 3: "Élevée"}[level]
+    bars = "".join(
+        f'<span class="bar{" on" if i < level else ""}" style="height:{14 + i * 9}px"></span>'
+        for i in range(3)
+    )
+    size = fit_size(task, [(25, 50), (60, 42), (120, 34), (220, 28), (10**9, 24)])
 
     return f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body {{
-    background:#fff;
-    display:flex; justify-content:center; padding:20px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }}
-  #ticket {{
-    width:{PAPER_WIDTH}px; background:#fff; padding:28px; text-align:center;
-  }}
-  .title {{
-    font-size:1.7rem; font-weight:900; margin:0 0 12px;
-  }}
-  .date-box {{
-    font-size:1.2rem; color:#444;
-    margin:20px 0;
-    display:flex; flex-direction:column; align-items:center;
-  }}
-  .date-box .line {{
-    width:100%; border-top: 2px solid #444; margin:6px 0;
-  }}
-  .priority-wrapper {{
-    border: 2px solid #444;
-    border-radius: 8px;
-    padding: 8px 12px;
-    margin-bottom: 20px;
-  }}
-  .priority-text {{
-    font-size:1.4rem; font-weight:800;
-  }}
-  .task-wrapper {{
-    word-wrap: break-word;
-    text-align: center;
-    white-space: normal;
-    font-size:2.3rem; font-weight:800; margin:28px 0;
-    padding: 0 10px;
-  }}
-  .footer {{
-    font-size:1.4rem; color:#666; margin-top:36px;
-  }}
+{BASE_CSS}
+.task {{
+  font-size:{size}px; font-weight: 900; line-height: 1.12; letter-spacing: -.01em;
+  word-wrap: break-word; overflow-wrap: anywhere; padding: 6px 4px;
+}}
+.prio {{ display:flex; align-items:center; gap: 14px; }}
+.prio .lbl {{ font-size: 1.05rem; font-weight: 700; flex: 1; }}
+.bars {{ display:flex; align-items:flex-end; gap: 5px; }}
+.bar {{ width: 14px; border: 3px solid #000; border-radius: 3px; }}
+.bar.on {{ background:#000; }}
+.prio .val {{ font-size: 1.5rem; font-weight: 900; padding: 4px 12px; border: 3px solid #000; border-radius: 10px; }}
+.prio .val.hot {{ background:#000; color:#fff; }}
+.done {{ display:flex; align-items:center; gap: 14px; font-size: 1.15rem; font-weight: 700; }}
+.box {{ width: 34px; height: 34px; border: 4px solid #000; border-radius: 7px; flex: 0 0 auto; }}
+.done .line {{ flex:1; border-bottom: 3px dotted #000; height: 26px; }}
 </style>
 </head>
 <body>
   <div id="ticket">
-    <div class="title">🧾 Tâche à faire</div>
+    <div class="band">
+      {ICON_CHECK}
+      <div class="t">À FAIRE</div>
+      <div class="h mono">{now:%H:%M}</div>
+    </div>
+    <div class="date mono caps">{date_fr(now)}</div>
 
-    <div class="date-box">
-      <div class="line"></div>
-      <div>📅 Créé le : {now}</div>
-      <div class="line"></div>
-    </div>
-    
-    <div class="priority-wrapper">
-      <div class="priority-text">Priorité : {priority_text}</div>
+    <div class="dash"></div>
+    <div class="task">{as_html(task)}</div>
+    <div class="dash"></div>
+
+    <div class="prio">
+      <div class="lbl mono caps">Priorité</div>
+      <div class="bars">{bars}</div>
+      <div class="val{" hot" if level == 3 else ""}">{priority_text}</div>
     </div>
 
-    <div class="task-wrapper">
-      {task}
+    <div class="rule"></div>
+    <div class="done">
+      <div class="box"></div>
+      <div class="mono caps">Fait le</div>
+      <div class="line"></div>
     </div>
-    <div class="footer">🔔 N’oublie pas de la réaliser.</div>
   </div>
 </body>
 </html>"""
 
 def generate_message_html(message: str, sender: str) -> str:
-    now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    message = html.escape(message).replace("\n", "<br>")
-    sender = html.escape(sender)
+    now = datetime.now()
+    size = fit_size(message, [(40, 40), (110, 34), (220, 29), (350, 25), (10**9, 22)])
 
     return f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
 <style>
-  body {{
-    background:#fff; margin:0;
-    display:flex; justify-content:center; padding:20px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }}
-  #ticket {{
-    width:{PAPER_WIDTH}px; background:#fff; padding:28px; text-align:center;
-  }}
-  .title {{
-    font-size:1.9rem; font-weight:900; margin:0 0 6px;
-  }}
-  .from {{
-    font-size:1.5rem; margin:0 0 4px;
-  }}
-  .from b {{ font-weight:900; }}
-  .date {{
-    font-size:1.1rem; color:#444;
-  }}
-  .dashed {{
-    border-top: 3px dashed #444; margin:22px 0;
-  }}
-  .message {{
-    word-wrap: break-word; white-space: normal;
-    font-size:1.8rem; font-weight:600; line-height:1.35;
-    text-align:left; padding: 0 6px;
-  }}
-  .quote {{
-    font-size:4rem; font-weight:900; line-height:1; height:2.2rem;
-  }}
-  .signature {{
-    text-align:right; font-size:1.5rem; font-style:italic; margin-top:18px; padding: 0 6px;
-  }}
-  .footer {{
-    font-size:1.2rem; color:#666; margin-top:8px;
-  }}
+{BASE_CSS}
+.from {{ display:flex; align-items:center; gap: 14px; }}
+.from .chip {{ background:#000; color:#fff; font-size: 1rem; font-weight: 700; padding: 6px 10px; border-radius: 8px; }}
+.from .name {{ font-size: 2rem; font-weight: 900; line-height: 1.1; overflow-wrap: anywhere; }}
+.quote {{ font-family: Georgia, 'DejaVu Serif', serif; font-size: 6rem; font-weight: 900; line-height: .6; height: 42px; }}
+.message {{
+  font-size:{size}px; font-weight: 700; line-height: 1.32;
+  word-wrap: break-word; overflow-wrap: anywhere; padding: 0 4px;
+}}
+.sign {{ font-family: 'Caveat', cursive; font-size: 2.9rem; text-align: right; margin-top: 14px; padding-right: 6px; line-height: 1; overflow-wrap: anywhere; }}
+.footer {{ display:flex; align-items:center; justify-content:center; gap: 8px; font-size: .95rem; font-weight: 700; }}
 </style>
 </head>
 <body>
   <div id="ticket">
-    <div class="title">💌 Nouveau message</div>
-    <div class="from">de <b>{sender}</b></div>
-    <div class="date">📅 Reçu le : {now}</div>
+    <div class="band">
+      {ICON_MAIL}
+      <div class="t">MESSAGE</div>
+      <div class="h mono">{now:%H:%M}</div>
+    </div>
+    <div class="date mono caps">{date_fr(now)}</div>
 
-    <div class="dashed"></div>
+    <div class="rule"></div>
+    <div class="from">
+      <div class="chip mono caps">De</div>
+      <div class="name">{html.escape(sender)}</div>
+    </div>
+    <div class="dash"></div>
+
     <div class="quote">“</div>
-    <div class="message">{message}</div>
-    <div class="signature">— {sender}</div>
-    <div class="dashed"></div>
+    <div class="message">{as_html(message)}</div>
+    <div class="sign">— {html.escape(sender)}</div>
 
-    <div class="footer">✉️ Envoyé depuis ton IMP</div>
+    <div class="rule"></div>
+    <div class="footer mono caps">Envoyé avec {ICON_HEART} pour toi</div>
   </div>
 </body>
 </html>"""
